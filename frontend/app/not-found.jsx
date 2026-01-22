@@ -1,48 +1,18 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function NotFound() {
-  const router = useRouter();
-  
-  const handleGoBack = () => {
-    router.back();
-  };
-  
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '2rem',
-      backgroundColor: '#f3f4f6'
-    }}>
-      <h1 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#374151', marginBottom: '1rem' }}>
-        404
-      </h1>
-      <h2 style={{ fontSize: '1.5rem', color: '#6b7280', marginBottom: '2rem' }}>
-        Page Not Found
-      </h2>
-      <p style={{ color: '#9ca3af', textAlign: 'center', maxWidth: '400px' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-100">
+      <h1 className="text-5xl font-bold text-gray-700 mb-4">404</h1>
+      <h2 className="text-2xl text-gray-500 mb-8">Page Not Found</h2>
+      <p className="text-gray-400 text-center max-w-md mb-8">
         Sorry, we couldn't find the page you're looking for.
       </p>
-      <button 
-        onClick={handleGoBack}
-        style={{
-          marginTop: '2rem',
-          padding: '0.75rem 1.5rem',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          border: 'none',
-          borderRadius: '0.5rem',
-          cursor: 'pointer',
-          fontSize: '1rem'
-        }}
-      >
-        Go Back
-      </button>
+      <Link href="/">
+        <button className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200">
+          Return Home
+        </button>
+      </Link>
     </div>
   );
 }
