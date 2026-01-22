@@ -1,11 +1,27 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { assets } from '@/assets/assets'
 import Image from 'next/image';
 import { useAppContext } from '@/context/AppContext';
 
 const ProductCard = ({ product }) => {
-
-    const { currency, router } = useAppContext()
+    const { currency, router, addToWishlist, removeFromWishlist, isInWishlist, addToCart } = useAppContext();
+    const [isInWishlistState, setIsInWishlistState] = useState(false);
+    
+    useEffect(() => {
+        setIsInWishlistState(isInWishlist(product._id));
+    }, [product._id]);
+    
+    const handleWishlistClick = async (e) => {
+        e.stopPropagation(); // Prevent triggering the product navigation
+        
+        if (isInWishlistState) {
+            await removeFromWishlist(product._id);
+            setIsInWishlistState(false);
+        } else {
+            await addToWishlist(product._id);
+            setIsInWishlistState(true);
+        }
+    };
 
     return (
         <div
@@ -14,15 +30,18 @@ const ProductCard = ({ product }) => {
         >
             <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 h-48 flex items-center justify-center overflow-hidden group">
                 <Image
-                    src={product.image && product.image.length > 0 ? product.image[0] : '/placeholder.svg'}
+                    src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder.svg'}
                     alt={product.name}
                     className="group-hover:scale-110 transition duration-500 object-contain w-3/4 h-3/4"
                     width={300}
                     height={300}
                 />
-                <button className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors duration-200">
+                <button 
+                    onClick={handleWishlistClick}
+                    className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow-lg hover:bg-white transition-colors duration-200"
+                >
                     <Image
-                        className="h-4 w-4 text-gray-600"
+                        className={`h-4 w-4 ${isInWishlistState ? 'text-red-500' : 'text-gray-600'}`}
                         src={assets.heart_icon}
                         alt="wishlist"
                     />
@@ -59,7 +78,13 @@ const ProductCard = ({ product }) => {
                             <span className="text-sm text-gray-500 line-through">{currency}{product.price}</span>
                         )}
                     </div>
-                    <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering the product navigation
+                            addToCart(product._id);
+                        }}
+                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                    >
                         Add to Cart
                     </button>
                 </div>

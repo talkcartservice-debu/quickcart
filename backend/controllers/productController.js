@@ -113,10 +113,111 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// @desc    Get all products with advanced search and filtering
+// @route   GET /api/products/search
+// @access  Public
+const searchProducts = async (req, res) => {
+  try {
+    const {
+      search,
+      category,
+      minPrice,
+      maxPrice,
+      sortBy,
+      page = 1,
+      limit = 20,
+      minRating
+    } = req.query;
+
+    // Build filter object
+    let filter = {};
+
+    // Search functionality
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Category filter
+    if (category) {
+      filter.category = category;
+    }
+
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.offerPrice = {};
+      if (minPrice) filter.offerPrice.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.offerPrice.$lte = parseFloat(maxPrice);
+    }
+
+    // Rating filter
+    if (minRating) {
+      filter.averageRating = { $gte: parseFloat(minRating) };
+    }
+
+    // Build sort object
+    let sort = {};
+    switch (sortBy) {
+      case 'price-low':
+        sort.offerPrice = 1;
+        break;
+      case 'price-high':
+        sort.offerPrice = -1;
+        break;
+      case 'rating':
+        sort.averageRating = -1;
+        break;
+      case 'newest':
+        sort.createdAt = -1;
+        break;
+      case 'oldest':
+        sort.createdAt = 1;
+        break;
+      case 'name-asc':
+        sort.name = 1;
+        break;
+      case 'name-desc':
+        sort.name = -1;
+        break;
+      default:
+        sort.createdAt = -1; // Default to newest first
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get products with filters
+    const products = await Product.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Get total count for pagination
+    const total = await Product.countDocuments(filter);
+
+    res.json({
+      products,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        totalItems: total,
+        hasNext: page < Math.ceil(total / parseInt(limit)),
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    console.error('Search products error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  searchProducts
 };

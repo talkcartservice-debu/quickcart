@@ -4,7 +4,7 @@ import apiService from "@/services/api";
 
 const OrderSummary = () => {
 
-  const { currency, router, getCartCount, getCartAmount } = useAppContext()
+  const { currency, router, getCartCount, getCartAmount, cartItems } = useAppContext()
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -53,10 +53,11 @@ const OrderSummary = () => {
         address: selectedAddress
       };
 
+      // Create the order first
       const order = await apiService.createOrder(orderData);
       
-      // Navigate to order placed page
-      router.push('/order-placed');
+      // Then redirect to payment page
+      router.push(`/checkout?orderId=${order._id}`);
       
     } catch (error) {
       console.error('Failed to create order:', error);

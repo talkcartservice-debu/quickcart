@@ -52,7 +52,7 @@ const ProductList = () => {
                   <td className="md:px-4 pl-2 md:pl-4 py-3 flex items-center space-x-3 truncate">
                     <div className="bg-gray-500/10 rounded p-2">
                       <Image
-                        src={product.image && product.image.length > 0 ? product.image[0] : '/placeholder.svg'}
+                        src={product.images && product.images.length > 0 ? product.images[0] : '/placeholder.svg'}
                         alt="product Image"
                         className="w-16"
                         width={1280}

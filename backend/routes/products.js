@@ -5,13 +5,17 @@ const {
   getProductById, 
   createProduct, 
   updateProduct, 
-  deleteProduct 
+  deleteProduct,
+  searchProducts
 } = require('../controllers/productController');
 const { protect, sellerProtect } = require('../middleware/auth');
 
 // Public routes
 router.route('/')
   .get(getProducts);
+
+router.route('/search')
+  .get(searchProducts);
 
 router.route('/:id')
   .get(getProductById);

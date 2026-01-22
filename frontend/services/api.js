@@ -86,6 +86,13 @@ class APIService {
     return this.request('/api/products');
   }
 
+  async searchProducts(params = {}) {
+    // Convert params object to query string
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/products/search?${queryString}` : '/api/products/search';
+    return this.request(url);
+  }
+
   async getProduct(id) {
     return this.request(`/api/products/${id}`);
   }
@@ -178,6 +185,213 @@ class APIService {
     return this.request(`/api/addresses/${id}`, {
       method: 'DELETE'
     });
+  }
+
+  // Payment APIs
+  async getPaymentMethods() {
+    return this.request('/api/payments/methods');
+  }
+
+  async createPaymentIntent(paymentData) {
+    return this.request('/api/payments/create-intent', {
+      method: 'POST',
+      body: JSON.stringify(paymentData)
+    });
+  }
+
+  async processRefund(refundData) {
+    return this.request('/api/payments/refund', {
+      method: 'POST',
+      body: JSON.stringify(refundData)
+    });
+  }
+
+  // Wishlist APIs
+  async getWishlist() {
+    return this.request('/api/wishlist');
+  }
+
+  async addToWishlist(productId) {
+    return this.request('/api/wishlist/add', {
+      method: 'POST',
+      body: JSON.stringify({ productId })
+    });
+  }
+
+  async removeFromWishlist(productId) {
+    return this.request('/api/wishlist/remove', {
+      method: 'POST',
+      body: JSON.stringify({ productId })
+    });
+  }
+
+  async checkWishlist(productId) {
+    return this.request(`/api/wishlist/${productId}/is-in-wishlist`);
+  }
+
+  async clearWishlist() {
+    return this.request('/api/wishlist/clear', {
+      method: 'DELETE'
+    });
+  }
+
+  // Review APIs
+  async addReview(productId, reviewData) {
+    return this.request(`/api/reviews/product/${productId}`, {
+      method: 'POST',
+      body: JSON.stringify(reviewData)
+    });
+  }
+
+  async getProductReviews(productId) {
+    return this.request(`/api/reviews/product/${productId}`);
+  }
+
+  async getUserReview(productId) {
+    return this.request(`/api/reviews/product/${productId}/user`);
+  }
+
+  async deleteReview(productId) {
+    return this.request(`/api/reviews/product/${productId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getUserReviews() {
+    return this.request('/api/reviews/user');
+  }
+
+  // Tracking APIs
+  async getOrderTracking(orderId) {
+    return this.request(`/api/tracking/order/${orderId}`);
+  }
+
+  async updateOrderTracking(orderId, trackingData) {
+    return this.request(`/api/tracking/order/${orderId}`, {
+      method: 'PUT',
+      body: JSON.stringify(trackingData)
+    });
+  }
+
+  async getUserTrackedOrders() {
+    return this.request('/api/tracking/user');
+  }
+
+  async getAllTrackedOrders(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/tracking?${queryString}` : '/api/tracking';
+    return this.request(url);
+  }
+
+  async getOrderByTrackingNumber(trackingNumber) {
+    return this.request(`/api/tracking/tracking/${trackingNumber}`);
+  }
+
+  // Email Notification APIs
+  async sendWelcomeEmail(userId) {
+    return this.request(`/api/emails/welcome/${userId}`, {
+      method: 'POST'
+    });
+  }
+
+  async sendOrderConfirmationEmail(orderId) {
+    return this.request(`/api/emails/order-confirmation/${orderId}`, {
+      method: 'POST'
+    });
+  }
+
+  async sendShippingNotification(orderId) {
+    return this.request(`/api/emails/shipping/${orderId}`, {
+      method: 'POST'
+    });
+  }
+
+  async sendDeliveryNotification(orderId) {
+    return this.request(`/api/emails/delivery/${orderId}`, {
+      method: 'POST'
+    });
+  }
+
+  async sendPasswordResetEmail(email) {
+    return this.request('/api/emails/password-reset', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  }
+
+  async sendWishlistNotification(productId) {
+    return this.request(`/api/emails/wishlist/${productId}`, {
+      method: 'POST'
+    });
+  }
+
+  // Social Media APIs
+  async getSocialPlatforms() {
+    return this.request('/api/social/platforms');
+  }
+
+  async getSocialShareUrl(platform, content, url) {
+    const params = new URLSearchParams({ platform, content, url }).toString();
+    return this.request(`/api/social/share-url?${params}`);
+  }
+
+  async shareToSocialMedia(platform, content, url, imageUrl) {
+    return this.request('/api/social/share', {
+      method: 'POST',
+      body: JSON.stringify({ platform, content, url, imageUrl })
+    });
+  }
+
+  async initiateSocialAuth(platform) {
+    // This would redirect to the OAuth endpoint
+    window.location.href = `${this.baseURL}/api/social/auth/${platform}`;
+  }
+
+  // Analytics APIs
+  async getSalesAnalytics(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/analytics/sales?${queryString}` : '/api/analytics/sales';
+    return this.request(url);
+  }
+
+  async getUserAnalytics(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/analytics/users?${queryString}` : '/api/analytics/users';
+    return this.request(url);
+  }
+
+  async getProductAnalytics(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/analytics/products?${queryString}` : '/api/analytics/products';
+    return this.request(url);
+  }
+
+  async getInventoryAnalytics(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/analytics/inventory?${queryString}` : '/api/analytics/inventory';
+    return this.request(url);
+  }
+
+  async getDashboardOverview() {
+    return this.request('/api/analytics/dashboard');
+  }
+
+  async getRevenueByCategory(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/analytics/revenue-by-category?${queryString}` : '/api/analytics/revenue-by-category';
+    return this.request(url);
+  }
+
+  async getTopSellingProducts(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/analytics/top-selling?${queryString}` : '/api/analytics/top-selling';
+    return this.request(url);
+  }
+
+  async getCustomerAcquisition(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `/api/analytics/customer-acquisition?${queryString}` : '/api/analytics/customer-acquisition';
+    return this.request(url);
   }
 }
 

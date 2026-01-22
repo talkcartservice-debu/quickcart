@@ -31,6 +31,7 @@ export const AppContextProvider = ({ router, children }) => {
     const [userData, setUserData] = useState(null)
     const [isSeller, setIsSeller] = useState(false)
     const [cartItems, setCartItems] = useState({})
+    const [wishlistItems, setWishlistItems] = useState([])
     const [loading, setLoading] = useState(true)
 
     // Note: Router will be passed from parent component in client wrapper
@@ -106,10 +107,53 @@ export const AppContextProvider = ({ router, children }) => {
         return Math.floor(totalAmount * 100) / 100;
     }
 
+    const fetchWishlistData = async () => {
+        try {
+            const data = await apiService.getWishlist();
+            setWishlistItems(data.products || []);
+        } catch (error) {
+            console.error('Failed to fetch wishlist:', error);
+            setWishlistItems([]);
+        }
+    }
+
+    const addToWishlist = async (productId) => {
+        try {
+            const updatedWishlist = await apiService.addToWishlist(productId);
+            setWishlistItems(updatedWishlist.products || []);
+            return true;
+        } catch (error) {
+            console.error('Failed to add to wishlist:', error);
+            return false;
+        }
+    }
+
+    const removeFromWishlist = async (productId) => {
+        try {
+            const updatedWishlist = await apiService.removeFromWishlist(productId);
+            setWishlistItems(updatedWishlist.products || []);
+            return true;
+        } catch (error) {
+            console.error('Failed to remove from wishlist:', error);
+            return false;
+        }
+    }
+
+    const isInWishlist = (productId) => {
+        return wishlistItems.some(item => item._id === productId);
+    }
+
+    const getWishlistCount = () => {
+        return wishlistItems.length;
+    }
+
     useEffect(() => {
         fetchProductData();
         fetchUserData();
-    }, [])
+        if (userData) {
+            fetchWishlistData();
+        }
+    }, [userData])
 
     const value = {
         currency,
@@ -120,6 +164,9 @@ export const AppContextProvider = ({ router, children }) => {
         cartItems, setCartItems,
         addToCart, updateCartQuantity,
         getCartCount, getCartAmount,
+        wishlistItems, fetchWishlistData,
+        addToWishlist, removeFromWishlist,
+        isInWishlist, getWishlistCount,
         loading
     }
 
