@@ -8,7 +8,7 @@ const {
   deleteProduct,
   searchProducts
 } = require('../controllers/productController');
-const { protect, sellerProtect } = require('../middleware/auth');
+const { protect, adminProtect } = require('../middleware/auth');
 
 // Public routes
 router.route('/')
@@ -19,13 +19,5 @@ router.route('/search')
 
 router.route('/:id')
   .get(getProductById);
-
-// Protected routes (seller only)
-router.route('/')
-  .post(protect, sellerProtect, createProduct);
-
-router.route('/:id')
-  .put(protect, sellerProtect, updateProduct)
-  .delete(protect, sellerProtect, deleteProduct);
 
 module.exports = router;

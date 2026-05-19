@@ -66,10 +66,11 @@ const MyOrders = () => {
                                 </div>
                                 <p className="font-medium my-auto">{currency}{order.amount}</p>
                                 <div>
-                                    <p className="flex flex-col">
-                                        <span>Method : COD</span>
-                                        <span>Date : {new Date(order.date).toLocaleDateString()}</span>
-                                        <span>Payment : Pending</span>
+                                    <p className="flex flex-col gap-1">
+                                        <span>Method : <span className="capitalize">{order.paymentMethod || 'N/A'}</span></span>
+                                        <span>Date : {new Date(order.createdAt || order.date).toLocaleDateString()}</span>
+                                        <span>Payment : <span className={`capitalize font-medium ${order.paymentStatus === 'completed' ? 'text-green-600' : order.paymentStatus === 'failed' ? 'text-red-600' : 'text-yellow-600'}`}>{order.paymentStatus || 'pending'}</span></span>
+                                        <span>Status : <span className={`capitalize font-medium ${order.status === 'Delivered' ? 'text-green-600' : order.status === 'Cancelled' ? 'text-red-600' : 'text-blue-600'}`}>{order.status || 'Order Placed'}</span></span>
                                     </p>
                                 </div>
                             </div>

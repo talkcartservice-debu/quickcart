@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import apiService from '../../frontend/services/api';
+import apiService from '@/services/api';
 
 const AnalyticsDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -51,7 +51,6 @@ const AnalyticsDashboard = () => {
     );
   }
 
-  // Prepare data for charts
   const salesChartData = Object.entries(dashboardData.sales.revenueByDay || {}).map(([date, revenue]) => ({
     date,
     revenue: parseFloat(revenue.toFixed(2))
@@ -63,7 +62,6 @@ const AnalyticsDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Dashboard Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
           <h3 className="text-lg font-semibold text-gray-600">Total Revenue</h3>
@@ -90,7 +88,6 @@ const AnalyticsDashboard = () => {
         </div>
       </div>
 
-      {/* Period Selector */}
       <div className="bg-white p-4 rounded-lg shadow-md">
         <div className="flex justify-end mb-4">
           <select 
@@ -105,7 +102,6 @@ const AnalyticsDashboard = () => {
           </select>
         </div>
 
-        {/* Sales Chart */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold mb-4">Sales Over Time</h3>
           <div className="h-80">
@@ -122,7 +118,6 @@ const AnalyticsDashboard = () => {
           </div>
         </div>
 
-        {/* Revenue by Category */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div>
             <h3 className="text-xl font-semibold mb-4">Revenue by Category</h3>
@@ -166,7 +161,6 @@ const AnalyticsDashboard = () => {
           </div>
         </div>
 
-        {/* Top Products */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold mb-4">Top Selling Products</h3>
           <div className="overflow-x-auto">
@@ -195,7 +189,6 @@ const AnalyticsDashboard = () => {
           </div>
         </div>
 
-        {/* Orders by Status */}
         <div>
           <h3 className="text-xl font-semibold mb-4">Orders by Status</h3>
           <div className="h-64">

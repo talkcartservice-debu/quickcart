@@ -6,12 +6,19 @@ require('dotenv').config();
 // Initialize Cloudinary
 require('./utils/cloudinaryConfig');
 
+// Initialize cart cleanup scheduler
+const { startCartCleanupScheduler } = require('./utils/cartManager');
+startCartCleanupScheduler();
+
 const app = express();
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/quickcart')
@@ -36,6 +43,8 @@ const trackingRoutes = require('./routes/tracking');
 const emailRoutes = require('./routes/emails');
 const socialRoutes = require('./routes/social');
 const analyticsRoutes = require('./routes/analytics');
+const guestCartRoutes = require('./routes/guestCart');
+const adminRoutes = require('./routes/admin');
 
 // Use routes
 app.use('/api/auth', authRoutes);
@@ -50,6 +59,8 @@ app.use('/api/tracking', trackingRoutes);
 app.use('/api/emails', emailRoutes);
 app.use('/api/social', socialRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/guest-cart', guestCartRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react'
 import { assets } from '@/assets/assets'
 import Image from 'next/image';
@@ -26,7 +27,7 @@ const ProductCard = ({ product }) => {
     return (
         <div
             onClick={() => { router.push('/product/' + product._id); scrollTo(0, 0) }}
-            className="flex flex-col bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-sm mx-auto"
+            className="flex flex-col bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-xs sm:max-w-sm mx-auto"
         >
             <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 h-48 flex items-center justify-center overflow-hidden group">
                 <Image
@@ -60,7 +61,7 @@ const ProductCard = ({ product }) => {
                         {[...Array(5)].map((_, index) => (
                             <svg 
                                 key={index}
-                                className={`w-4 h-4 ${index < 4 ? 'text-yellow-400' : 'text-gray-300'}`}
+                                className={`w-4 h-4 ${index < Math.round(product.averageRating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
                                 fill="currentColor" 
                                 viewBox="0 0 20 20"
                             >
@@ -68,10 +69,10 @@ const ProductCard = ({ product }) => {
                             </svg>
                         ))}
                     </div>
-                    <span className="text-gray-500 text-sm">(128)</span>
+                    <span className="text-gray-500 text-sm">({product.totalReviews || 0})</span>
                 </div>
 
-                <div className="flex items-center justify-between mt-auto pt-2">
+                <div className="flex flex-col items-center gap-3 mt-auto pt-2">
                     <div className="flex items-center gap-2">
                         <span className="text-xl font-bold text-gray-900">{currency}{product.offerPrice}</span>
                         {product.price && product.price > product.offerPrice && (
@@ -83,7 +84,7 @@ const ProductCard = ({ product }) => {
                             e.stopPropagation(); // Prevent triggering the product navigation
                             addToCart(product._id);
                         }}
-                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+                        className="w-full px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
                     >
                         Add to Cart
                     </button>

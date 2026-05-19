@@ -17,8 +17,31 @@ const protect = async (req, res, next) => {
       
       next();
     } catch (error) {
-      console.error('Token verification error:', error);
-      return res.status(401).json({ message: 'Not authorized, token failed' });
+      // Log detailed error information for debugging
+      console.error('Token verification error:', {
+        name: error.name,
+        message: error.message,
+        tokenProvided: !!token,
+        secretLength: process.env.JWT_SECRET?.length || 0
+      });
+      
+      // Return specific error messages based on error type
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ 
+          message: 'Invalid token signature. Please log in again.',
+          code: 'INVALID_TOKEN'
+        });
+      } else if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ 
+          message: 'Token expired. Please log in again.',
+          code: 'TOKEN_EXPIRED'
+        });
+      } else {
+        return res.status(401).json({ 
+          message: 'Authentication failed. Please log in again.',
+          code: 'AUTH_FAILED'
+        });
+      }
     }
   }
 
@@ -35,4 +58,12 @@ const sellerProtect = (req, res, next) => {
   }
 };
 
-module.exports = { protect, sellerProtect };
+const adminProtect = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    return res.status(403).json({ message: 'Access denied. Admin access required.' });
+  }
+};
+
+module.exports = { protect, sellerProtect, adminProtect };

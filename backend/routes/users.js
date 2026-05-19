@@ -4,7 +4,8 @@ const {
   getUserCart, 
   addToCart, 
   updateCartItem, 
-  removeFromCart 
+  removeFromCart,
+  validateCart 
 } = require('../controllers/userController');
 const { protect } = require('../middleware/auth');
 
@@ -15,5 +16,8 @@ router.route('/cart')
 router.route('/cart/:productId')
   .put(protect, updateCartItem)
   .delete(protect, removeFromCart);
+
+// Cart validation endpoint
+router.post('/cart/validate', protect, validateCart);
 
 module.exports = router;

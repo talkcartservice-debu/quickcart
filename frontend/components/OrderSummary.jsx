@@ -1,12 +1,20 @@
-import { useAppContext } from "@/context/AppContext";
+'use client';
 import React, { useEffect, useState } from "react";
 import apiService from "@/services/api";
+import { useAppContext } from "@/context/AppContext";
+
+const VALID_PROMO_CODES = { 'SAVE10': 0.10, 'QUICK20': 0.20 };
 
 const OrderSummary = () => {
 
-  const { currency, router, getCartCount, getCartAmount, cartItems } = useAppContext()
+  const { currency, router, getCartCount, getCartAmount, cartItems, setCartItems } = useAppContext()
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState('');
+  const [promoApplied, setPromoApplied] = useState('');
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   const [userAddresses, setUserAddresses] = useState([]);
 
@@ -30,38 +38,57 @@ const OrderSummary = () => {
     setIsDropdownOpen(false);
   };
 
+  const handleApplyPromo = () => {
+    const code = promoCode.trim().toUpperCase();
+    if (VALID_PROMO_CODES[code]) {
+      setPromoDiscount(VALID_PROMO_CODES[code]);
+      setPromoApplied(code);
+      setPromoError('');
+    } else {
+      setPromoError('Invalid promo code. Try SAVE10 or QUICK20.');
+      setPromoDiscount(0);
+      setPromoApplied('');
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode('');
+    setPromoDiscount(0);
+    setPromoApplied('');
+    setPromoError('');
+  };
+
   const createOrder = async () => {
     if (!selectedAddress) {
       alert('Please select an address');
       return;
     }
 
+    const items = Object.keys(cartItems).map(productId => ({
+      productId,
+      quantity: cartItems[productId]
+    })).filter(item => item.quantity > 0);
+
+    if (items.length === 0) {
+      alert('Cart is empty');
+      return;
+    }
+
+    setPlacingOrder(true);
     try {
-      // Prepare order items from cartItems
-      const items = Object.keys(cartItems).map(productId => ({
-        productId,
-        quantity: cartItems[productId]
-      })).filter(item => item.quantity > 0);
-
-      if (items.length === 0) {
-        alert('Cart is empty');
-        return;
-      }
-
       const orderData = {
         items,
         address: selectedAddress
       };
 
-      // Create the order first
       const order = await apiService.createOrder(orderData);
-      
-      // Then redirect to payment page
+      setCartItems({});
       router.push(`/checkout?orderId=${order._id}`);
-      
     } catch (error) {
       console.error('Failed to create order:', error);
       alert('Failed to place order. Please try again.');
+    } finally {
+      setPlacingOrder(false);
     }
   }
 
@@ -123,16 +150,28 @@ const OrderSummary = () => {
           <label className="text-base font-medium uppercase text-gray-600 block mb-2">
             Promo Code
           </label>
-          <div className="flex flex-col items-start gap-3">
-            <input
-              type="text"
-              placeholder="Enter promo code"
-              className="flex-grow w-full outline-none p-2.5 text-gray-600 border"
-            />
-            <button className="bg-orange-600 text-white px-9 py-2 hover:bg-orange-700">
-              Apply
-            </button>
-          </div>
+          {promoApplied ? (
+            <div className="flex items-center justify-between p-2.5 border border-green-300 bg-green-50 rounded">
+              <span className="text-green-700 text-sm font-medium">{promoApplied} applied — {Math.round(promoDiscount * 100)}% off!</span>
+              <button onClick={handleRemovePromo} className="text-green-700 hover:text-red-600 text-xs underline ml-2">Remove</button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-start gap-2">
+              <div className="flex w-full gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={e => { setPromoCode(e.target.value); setPromoError(''); }}
+                  placeholder="Enter promo code"
+                  className="flex-grow outline-none p-2.5 text-gray-600 border"
+                />
+                <button onClick={handleApplyPromo} className="bg-orange-600 text-white px-6 py-2 hover:bg-orange-700 whitespace-nowrap">
+                  Apply
+                </button>
+              </div>
+              {promoError && <p className="text-red-500 text-xs">{promoError}</p>}
+            </div>
+          )}
         </div>
 
         <hr className="border-gray-500/30 my-5" />
@@ -140,25 +179,35 @@ const OrderSummary = () => {
         <div className="space-y-4">
           <div className="flex justify-between text-base font-medium">
             <p className="uppercase text-gray-600">Items {getCartCount()}</p>
-            <p className="text-gray-800">{currency}{getCartAmount()}</p>
+            <p className="text-gray-800">{currency}{getCartAmount().toFixed(2)}</p>
           </div>
+          {promoDiscount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <p>Discount ({Math.round(promoDiscount * 100)}%)</p>
+              <p className="font-medium">-{currency}{(getCartAmount() * promoDiscount).toFixed(2)}</p>
+            </div>
+          )}
           <div className="flex justify-between">
             <p className="text-gray-600">Shipping Fee</p>
             <p className="font-medium text-gray-800">Free</p>
           </div>
           <div className="flex justify-between">
             <p className="text-gray-600">Tax (2%)</p>
-            <p className="font-medium text-gray-800">{currency}{Math.floor(getCartAmount() * 0.02)}</p>
+            <p className="font-medium text-gray-800">{currency}{(getCartAmount() * 0.02).toFixed(2)}</p>
           </div>
           <div className="flex justify-between text-lg md:text-xl font-medium border-t pt-3">
             <p>Total</p>
-            <p>{currency}{getCartAmount() + Math.floor(getCartAmount() * 0.02)}</p>
+            <p>{currency}{(getCartAmount() * (1 - promoDiscount) + getCartAmount() * 0.02).toFixed(2)}</p>
           </div>
         </div>
       </div>
 
-      <button onClick={createOrder} className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700">
-        Place Order
+      <button
+        onClick={createOrder}
+        disabled={placingOrder}
+        className="w-full bg-orange-600 text-white py-3 mt-5 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {placingOrder ? 'Placing Order...' : 'Place Order'}
       </button>
     </div>
   );

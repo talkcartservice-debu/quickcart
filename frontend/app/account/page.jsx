@@ -11,6 +11,9 @@ const Account = () => {
   const { userData, fetchUserData, loading } = useAppContext();
   const [activeTab, setActiveTab] = useState('profile');
   const [editMode, setEditMode] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState('');
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: ''
@@ -26,22 +29,9 @@ const Account = () => {
   }, [userData]);
 
   const handleEditToggle = () => {
-    if (editMode) {
-      // Save changes
-      const updateUserData = async () => {
-        try {
-          // In a real implementation, you would call an API to update user data
-          // For now, we'll just refetch the user data
-          await fetchUserData();
-          setEditMode(false);
-        } catch (error) {
-          console.error('Failed to update user data:', error);
-        }
-      };
-      updateUserData();
-    } else {
-      setEditMode(true);
-    }
+    setEditMode(true);
+    setSaveError('');
+    setSaveSuccess('');
   };
 
   const handleInputChange = (e) => {
@@ -54,12 +44,18 @@ const Account = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setSaveError('');
+    setSaveSuccess('');
     try {
-      // In a real implementation, you would call an API to update user data
-      // For now, just toggle edit mode
+      await apiService.updateProfile({ name: formData.name, email: formData.email });
+      await fetchUserData();
       setEditMode(false);
+      setSaveSuccess('Profile updated successfully.');
     } catch (error) {
-      console.error('Failed to save user data:', error);
+      setSaveError(error.message || 'Failed to save profile. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -167,9 +163,20 @@ const Account = () => {
             {activeTab === 'profile' && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">User Profile</h2>
+
+                {saveSuccess && (
+                  <div className="mb-4 p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg text-sm">
+                    {saveSuccess}
+                  </div>
+                )}
                 
                 {editMode ? (
                   <form onSubmit={handleSave}>
+                    {saveError && (
+                      <div className="mb-4 p-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
+                        {saveError}
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -178,6 +185,7 @@ const Account = () => {
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
+                          required
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                       </div>
@@ -188,6 +196,7 @@ const Account = () => {
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
+                          required
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         />
                       </div>
@@ -196,16 +205,17 @@ const Account = () => {
                     <div className="flex justify-end space-x-3 mt-6">
                       <button
                         type="button"
-                        onClick={() => setEditMode(false)}
+                        onClick={() => { setEditMode(false); setSaveError(''); }}
                         className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg"
+                        disabled={saving}
+                        className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Save Changes
+                        {saving ? 'Saving...' : 'Save Changes'}
                       </button>
                     </div>
                   </form>

@@ -35,6 +35,12 @@ const productSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  stock: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0
+  },
   averageRating: {
     type: Number,
     default: 0,

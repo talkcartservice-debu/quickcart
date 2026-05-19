@@ -5,10 +5,27 @@ import OrderSummary from "@/components/OrderSummary";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import { useAppContext } from "@/context/AppContext";
+import { useEffect, useState } from "react";
 
 const Cart = () => {
+  const { products, router, cartItems, addToCart, updateCartQuantity, getCartCount, validateCart } = useAppContext();
+  const [validationResult, setValidationResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showValidationNotice, setShowValidationNotice] = useState(true);
 
-  const { products, router, cartItems, addToCart, updateCartQuantity, getCartCount } = useAppContext();
+  // Validate cart when component mounts
+  useEffect(() => {
+    const validateCartOnLoad = async () => {
+      setIsLoading(true);
+      const result = await validateCart();
+      setValidationResult(result);
+      setIsLoading(false);
+    };
+
+    if (Object.keys(cartItems).length > 0) {
+      validateCartOnLoad();
+    }
+  }, [cartItems]);
 
   return (
     <>
@@ -21,6 +38,42 @@ const Cart = () => {
             </p>
             <p className="text-lg md:text-xl text-gray-500/80">{getCartCount()} Items</p>
           </div>
+          
+          {/* Cart validation notice */}
+          {validationResult && validationResult.validationIssues && validationResult.validationIssues.length > 0 && showValidationNotice && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium text-yellow-800">Cart Updated</h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    {validationResult.validationIssues.length} item{validationResult.validationIssues.length > 1 ? 's' : ''} in your cart needed adjustment due to stock changes.
+                  </p>
+                  <ul className="mt-2 text-sm text-yellow-700 list-disc pl-5 space-y-1">
+                    {validationResult.validationIssues.map((issue, index) => (
+                      <li key={index}>
+                        {issue.action === 'adjusted' 
+                          ? `Quantity adjusted from ${issue.originalQuantity} to ${issue.correctedQuantity}` 
+                          : issue.issue}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button 
+                  onClick={() => setShowValidationNotice(false)}
+                  className="text-yellow-700 hover:text-yellow-900 text-lg font-bold ml-2"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {isLoading && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
+              Validating cart items...
+            </div>
+          )}
+          
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto">
               <thead className="text-left">

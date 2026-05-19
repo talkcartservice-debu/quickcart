@@ -4,11 +4,11 @@ import { assets} from "@/assets/assets";
 import Link from "next/link"
 import { useAppContext } from "@/context/AppContext";
 import Image from "next/image";
-import apiService from "@/services/api";
 
 const Navbar = () => {
 
-  const { isSeller, router, userData } = useAppContext();
+  const { isSeller, isAdmin, router, userData, getCartCount } = useAppContext();
+  const cartCount = getCartCount();
 
   return (
     <nav className="flex items-center justify-between px-6 md:px-16 lg:px-32 py-3 border-b border-gray-300 text-gray-700">
@@ -32,20 +32,34 @@ const Navbar = () => {
           Contact
         </Link>
 
-        {isSeller && <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full">Seller Dashboard</button>}
+        {isAdmin && (
+          <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full bg-orange-50 border-orange-400 text-orange-700 font-medium">
+            Admin Panel
+          </button>
+        )}
 
       </div>
 
       <ul className="hidden md:flex items-center gap-4 ">
-        <Image className="w-4 h-4" src={assets.search_icon} alt="search icon" />
+        <Image className="w-4 h-4 cursor-pointer" src={assets.search_icon} alt="search icon" onClick={() => router.push('/all-products')} />
+        <button
+          onClick={() => router.push('/cart')}
+          className="relative hover:text-gray-900 transition"
+          aria-label="Cart"
+        >
+          <Image src={assets.cart_icon} alt="cart" className="w-5 h-5" />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full font-medium">
+              {cartCount > 9 ? '9+' : cartCount}
+            </span>
+          )}
+        </button>
         <button 
           className="flex items-center gap-2 hover:text-gray-900 transition"
           onClick={() => {
             if (userData) {
-              // Navigate to account page
               router.push('/account');
             } else {
-              // Navigate to login page
               router.push('/login');
             }
           }}
@@ -56,15 +70,29 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center md:hidden gap-3">
-        {isSeller && <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full">Seller Dashboard</button>}
+        {isAdmin && (
+          <button onClick={() => router.push('/seller')} className="text-xs border px-4 py-1.5 rounded-full bg-orange-50 border-orange-400 text-orange-700 font-medium">
+            Admin Panel
+          </button>
+        )}
+        <button
+          onClick={() => router.push('/cart')}
+          className="relative hover:text-gray-900 transition"
+          aria-label="Cart"
+        >
+          <Image src={assets.cart_icon} alt="cart" className="w-5 h-5" />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full font-medium">
+              {cartCount > 9 ? '9+' : cartCount}
+            </span>
+          )}
+        </button>
         <button 
           className="flex items-center gap-2 hover:text-gray-900 transition"
           onClick={() => {
             if (userData) {
-              // Navigate to account page
               router.push('/account');
             } else {
-              // Navigate to login page
               router.push('/login');
             }
           }}

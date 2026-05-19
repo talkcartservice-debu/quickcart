@@ -5,6 +5,18 @@ class APIService {
   constructor() {
     this.baseURL = API_BASE_URL;
     this.token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    this.sessionId = typeof window !== 'undefined' ? sessionStorage.getItem('sessionId') : null;
+    
+    // Generate session ID if it doesn't exist
+    if (typeof window !== 'undefined' && !this.sessionId) {
+      this.sessionId = this.generateSessionId();
+      sessionStorage.setItem('sessionId', this.sessionId);
+    }
+  }
+  
+  // Generate a unique session ID for guest cart
+  generateSessionId() {
+    return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
   // Set authentication token
@@ -27,10 +39,14 @@ class APIService {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     
+    // Include session ID for guest cart endpoints
+    const isGuestCartEndpoint = endpoint.includes('/guest-cart');
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
         ...(this.token && { 'Authorization': `Bearer ${this.token}` }),
+        ...(isGuestCartEndpoint && this.sessionId && { 'x-session-id': this.sessionId }),
         ...options.headers
       },
       ...options
@@ -41,6 +57,23 @@ class APIService {
       const data = await response.json();
       
       if (!response.ok) {
+        // Check if the error is related to invalid token signature
+        if (response.status === 401 && data.code === 'INVALID_TOKEN') {
+          // Clear the invalid token from localStorage
+          this.removeAuthToken();
+          console.warn('Invalid token detected. Token has been cleared from localStorage.');
+          
+          // Optionally redirect to login page
+          if (typeof window !== 'undefined') {
+            // Don't redirect on certain routes to avoid loops
+            const currentPath = window.location.pathname;
+            if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+              // Store the current route to redirect back after login
+              sessionStorage.setItem('redirectAfterLogin', currentPath);
+            }
+          }
+        }
+        
         throw new Error(data.message || 'Something went wrong');
       }
       
@@ -76,9 +109,54 @@ class APIService {
     return this.request('/api/auth/profile');
   }
 
+  async updateProfile(profileData) {
+    return this.request('/api/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    });
+  }
+
   async logout() {
     this.removeAuthToken();
     return { message: 'Logged out successfully' };
+  }
+  
+  // Guest Cart APIs
+  async getGuestCart() {
+    return this.request('/api/guest-cart');
+  }
+  
+  async addToGuestCart(productId, quantity = 1) {
+    return this.request('/api/guest-cart', {
+      method: 'POST',
+      body: JSON.stringify({ productId, quantity })
+    });
+  }
+  
+  async updateGuestCartItem(productId, quantity) {
+    return this.request(`/api/guest-cart/${productId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity })
+    });
+  }
+  
+  async removeFromGuestCart(productId) {
+    return this.request(`/api/guest-cart/${productId}`, {
+      method: 'DELETE'
+    });
+  }
+  
+  async mergeGuestCartToUserCart() {
+    return this.request('/api/guest-cart/merge', {
+      method: 'POST'
+    });
+  }
+  
+  // Validate cart items
+  async validateCart() {
+    return this.request('/api/users/cart/validate', {
+      method: 'POST'
+    });
   }
 
   // Product APIs
@@ -392,6 +470,59 @@ class APIService {
     const queryString = new URLSearchParams(params).toString();
     const url = queryString ? `/api/analytics/customer-acquisition?${queryString}` : '/api/analytics/customer-acquisition';
     return this.request(url);
+  }
+
+  // Admin APIs
+  async getAdminStats() {
+    return this.request('/api/admin/stats');
+  }
+
+  async getAllUsers() {
+    return this.request('/api/admin/users');
+  }
+
+  async updateUserRole(userId, role) {
+    return this.request(`/api/admin/users/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role })
+    });
+  }
+
+  async adminDeleteUser(userId) {
+    return this.request(`/api/admin/users/${userId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getAllOrders() {
+    return this.request('/api/admin/orders');
+  }
+
+  async updateOrderStatus(orderId, status, paymentStatus) {
+    return this.request(`/api/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, paymentStatus })
+    });
+  }
+
+  async adminCreateProduct(productData) {
+    return this.request('/api/admin/products', {
+      method: 'POST',
+      body: JSON.stringify(productData)
+    });
+  }
+
+  async adminUpdateProduct(productId, productData) {
+    return this.request(`/api/admin/products/${productId}`, {
+      method: 'PUT',
+      body: JSON.stringify(productData)
+    });
+  }
+
+  async adminDeleteProduct(productId) {
+    return this.request(`/api/admin/products/${productId}`, {
+      method: 'DELETE'
+    });
   }
 }
 

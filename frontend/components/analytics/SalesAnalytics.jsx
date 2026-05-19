@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import apiService from '../../frontend/services/api';
+import apiService from '@/services/api';
 
 const SalesAnalytics = () => {
   const [salesData, setSalesData] = useState(null);
@@ -59,7 +59,6 @@ const SalesAnalytics = () => {
     );
   }
 
-  // Prepare data for charts
   const revenueByDayData = Object.entries(salesData.revenueByDay || {}).map(([date, revenue]) => ({
     date,
     revenue: parseFloat(revenue.toFixed(2))
@@ -74,7 +73,6 @@ const SalesAnalytics = () => {
 
   return (
     <div className="space-y-6">
-      {/* Controls */}
       <div className="bg-white p-4 rounded-lg shadow-md">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <h2 className="text-2xl font-bold text-gray-800">Sales Analytics</h2>
@@ -112,7 +110,6 @@ const SalesAnalytics = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
           <h3 className="text-lg font-semibold text-gray-600">Total Revenue</h3>
@@ -130,9 +127,7 @@ const SalesAnalytics = () => {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Revenue Over Time */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold mb-4">Revenue Over Time</h3>
           <div className="h-80">
@@ -149,7 +144,6 @@ const SalesAnalytics = () => {
           </div>
         </div>
 
-        {/* Orders by Status */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold mb-4">Orders by Status</h3>
           <div className="h-80">
@@ -176,7 +170,6 @@ const SalesAnalytics = () => {
         </div>
       </div>
 
-      {/* Detailed Data Table */}
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h3 className="text-xl font-semibold mb-4">Sales Details</h3>
         <div className="overflow-x-auto">

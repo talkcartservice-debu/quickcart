@@ -5,7 +5,6 @@ import LanguageSelector from './LanguageSelector';
 const MultiLanguageDemo = () => {
   const { t, currentLanguage, isRTL } = useLanguage();
 
-  // Apply RTL styles if needed
   const containerClass = isRTL() 
     ? 'text-right' 
     : 'text-left';
@@ -21,7 +20,6 @@ const MultiLanguageDemo = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Navigation Section */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-3 text-gray-700">
               {t('navigation.navigation')}
@@ -35,7 +33,6 @@ const MultiLanguageDemo = () => {
             </ul>
           </div>
 
-          {/* Product Section */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-3 text-gray-700">
               {t('product.product_details')}
@@ -50,7 +47,6 @@ const MultiLanguageDemo = () => {
             </div>
           </div>
 
-          {/* Cart Section */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-3 text-gray-700">
               {t('cart.cart_title')}
@@ -66,7 +62,6 @@ const MultiLanguageDemo = () => {
             </div>
           </div>
 
-          {/* Auth Section */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-3 text-gray-700">
               {t('auth.login_title')}
@@ -104,7 +99,6 @@ const MultiLanguageDemo = () => {
           </div>
         </div>
 
-        {/* Current Language Info */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
           <h3 className="font-semibold text-blue-800 mb-2">
             {t('common.current_language_info')}

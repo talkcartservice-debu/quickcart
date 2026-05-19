@@ -3,172 +3,232 @@ import React, { useState } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import apiService from "@/services/api";
+import { useAppContext } from "@/context/AppContext";
+
+const CATEGORIES = ['Earphone', 'Headphone', 'Watch', 'Smartphone', 'Laptop', 'Camera', 'Accessories'];
 
 const AddProduct = () => {
+  const { fetchProductData } = useAppContext();
 
   const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Earphone');
+  const [category, setCategory] = useState('Smartphone');
   const [price, setPrice] = useState('');
   const [offerPrice, setOfferPrice] = useState('');
+  const [stock, setStock] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!name || !description || !price || !offerPrice) {
-      alert('Please fill all required fields');
+    setSuccessMsg('');
+    setErrorMsg('');
+
+    if (!name || !description || !price || !offerPrice || !stock) {
+      setErrorMsg('All fields are required.');
       return;
     }
-    
-    // For demo purposes, using placeholder images
-    // In production, you'd upload files to Cloudinary
+
+    if (parseFloat(offerPrice) > parseFloat(price)) {
+      setErrorMsg('Offer price cannot exceed original price.');
+      return;
+    }
+
     const placeholderImages = [
       'https://placehold.co/600x400/EEE/31343C?text=Product+Image+1',
       'https://placehold.co/600x400/EEE/31343C?text=Product+Image+2',
       'https://placehold.co/600x400/EEE/31343C?text=Product+Image+3',
       'https://placehold.co/600x400/EEE/31343C?text=Product+Image+4'
     ];
-    
+
     const productData = {
-      name,
-      description,
+      name: name.trim(),
+      description: description.trim(),
       category,
       price: parseFloat(price),
       offerPrice: parseFloat(offerPrice),
+      stock: parseInt(stock),
       images: placeholderImages
     };
-    
+
+    setSubmitting(true);
     try {
-      await apiService.createProduct(productData);
-      alert('Product added successfully!');
-      
-      // Reset form
+      await apiService.adminCreateProduct(productData);
+      await fetchProductData();
+      setSuccessMsg(`"${name}" has been added successfully!`);
       setName('');
       setDescription('');
       setPrice('');
       setOfferPrice('');
+      setStock('');
       setFiles([]);
-      
+      setCategory('Smartphone');
     } catch (error) {
-      console.error('Failed to add product:', error);
-      alert('Failed to add product. Please try again.');
+      setErrorMsg(error.message || 'Failed to add product. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex-1 min-h-screen flex flex-col justify-between">
-      <form onSubmit={handleSubmit} className="md:p-10 p-4 space-y-5 max-w-lg">
+    <div className="flex-1 min-h-screen flex flex-col">
+      <form onSubmit={handleSubmit} className="md:p-10 p-4 space-y-6 max-w-2xl">
         <div>
-          <p className="text-base font-medium">Product Image</p>
-          <div className="flex flex-wrap items-center gap-3 mt-2">
+          <h2 className="text-xl font-bold text-gray-800 mb-1">Add New Product</h2>
+          <p className="text-sm text-gray-500">Electronics catalog — admin only</p>
+        </div>
 
+        {successMsg && (
+          <div className="p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+            {successMsg}
+          </div>
+        )}
+        {errorMsg && (
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+            {errorMsg}
+          </div>
+        )}
+
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">Product Images</p>
+          <div className="flex flex-wrap items-center gap-3">
             {[...Array(4)].map((_, index) => (
-              <label key={index} htmlFor={`image${index}`}>
+              <label key={index} htmlFor={`image${index}`} className="cursor-pointer">
                 <input onChange={(e) => {
                   const updatedFiles = [...files];
                   updatedFiles[index] = e.target.files[0];
                   setFiles(updatedFiles);
-                }} type="file" id={`image${index}`} hidden />
-                <Image
-                  key={index}
-                  className="max-w-24 cursor-pointer"
-                  src={files[index] ? URL.createObjectURL(files[index]) : assets.upload_area}
-                  alt=""
-                  width={100}
-                  height={100}
-                />
+                }} type="file" id={`image${index}`} accept="image/*" hidden />
+                <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition">
+                  {files[index] ? (
+                    <img src={URL.createObjectURL(files[index])} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Image src={assets.upload_area} alt="upload" width={40} height={40} className="opacity-50" />
+                  )}
+                </div>
               </label>
             ))}
-
           </div>
+          <p className="text-xs text-gray-400 mt-1">Upload product images (preview only — stored as placeholders)</p>
         </div>
-        <div className="flex flex-col gap-1 max-w-md">
-          <label className="text-base font-medium" htmlFor="product-name">
-            Product Name
-          </label>
-          <input
-            id="product-name"
-            type="text"
-            placeholder="Type here"
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
-            onChange={(e) => setName(e.target.value)}
-            value={name}
-            required
-          />
-        </div>
-        <div className="flex flex-col gap-1 max-w-md">
-          <label
-            className="text-base font-medium"
-            htmlFor="product-description"
-          >
-            Product Description
-          </label>
-          <textarea
-            id="product-description"
-            rows={4}
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40 resize-none"
-            placeholder="Type here"
-            onChange={(e) => setDescription(e.target.value)}
-            value={description}
-            required
-          ></textarea>
-        </div>
-        <div className="flex items-center gap-5 flex-wrap">
-          <div className="flex flex-col gap-1 w-32">
-            <label className="text-base font-medium" htmlFor="category">
-              Category
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="text-sm font-medium text-gray-700 block mb-1" htmlFor="product-name">
+              Product Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="product-name"
+              type="text"
+              placeholder="e.g. Samsung Galaxy S24 Ultra"
+              className="w-full outline-none py-2.5 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              onChange={(e) => setName(e.target.value)}
+              value={name}
+              required
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="text-sm font-medium text-gray-700 block mb-1" htmlFor="product-description">
+              Product Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="product-description"
+              rows={4}
+              className="w-full outline-none py-2.5 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+              placeholder="Describe the product features, specs, and benefits..."
+              onChange={(e) => setDescription(e.target.value)}
+              value={description}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1" htmlFor="category">
+              Category <span className="text-red-500">*</span>
             </label>
             <select
               id="category"
-              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              className="w-full outline-none py-2.5 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 bg-white"
               onChange={(e) => setCategory(e.target.value)}
-              defaultValue={category}
+              value={category}
             >
-              <option value="Earphone">Earphone</option>
-              <option value="Headphone">Headphone</option>
-              <option value="Watch">Watch</option>
-              <option value="Smartphone">Smartphone</option>
-              <option value="Laptop">Laptop</option>
-              <option value="Camera">Camera</option>
-              <option value="Accessories">Accessories</option>
+              {CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
-          <div className="flex flex-col gap-1 w-32">
-            <label className="text-base font-medium" htmlFor="product-price">
-              Product Price
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1" htmlFor="stock">
+              Stock Quantity <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="stock"
+              type="number"
+              min="0"
+              placeholder="0"
+              className="w-full outline-none py-2.5 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              onChange={(e) => setStock(e.target.value)}
+              value={stock}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1" htmlFor="product-price">
+              Original Price ($) <span className="text-red-500">*</span>
             </label>
             <input
               id="product-price"
               type="number"
-              placeholder="0"
-              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              className="w-full outline-none py-2.5 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               onChange={(e) => setPrice(e.target.value)}
               value={price}
               required
             />
           </div>
-          <div className="flex flex-col gap-1 w-32">
-            <label className="text-base font-medium" htmlFor="offer-price">
-              Offer Price
+
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1" htmlFor="offer-price">
+              Sale Price ($) <span className="text-red-500">*</span>
             </label>
             <input
               id="offer-price"
               type="number"
-              placeholder="0"
-              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              className="w-full outline-none py-2.5 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               onChange={(e) => setOfferPrice(e.target.value)}
               value={offerPrice}
               required
             />
           </div>
         </div>
-        <button type="submit" className="px-8 py-2.5 bg-orange-600 text-white font-medium rounded">
-          ADD
+
+        {price && offerPrice && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500">Discount:</span>
+            <span className="font-medium text-green-600">
+              {price > 0 ? `${Math.round((1 - offerPrice / price) * 100)}% off` : '—'}
+            </span>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="px-10 py-3 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {submitting ? 'Adding Product...' : 'Add Product'}
         </button>
       </form>
-      {/* <Footer /> */}
     </div>
   );
 };

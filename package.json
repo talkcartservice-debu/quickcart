@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "QuickCart - A complete e-commerce solution with separate frontend and backend",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "cd frontend && npm run dev",
